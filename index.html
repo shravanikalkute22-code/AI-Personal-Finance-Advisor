@@ -1,23 +1,326 @@
-{% extends "base.html" %}
-{% block content %}
-<section class="hero">
-  <div>
-    <p class="eyebrow">AI-POWERED PERSONAL FINANCE</p>
-    <h1>Understand your money.<br><span>Plan your future.</span></h1>
-    <p class="lead">Track income and expenses, create budgets, monitor savings and receive personalized financial insights.</p>
-    <div class="actions"><a class="btn" href="{{ url_for('register') }}">Get Started</a><a class="btn secondary" href="{{ url_for('login') }}">Login</a></div>
-  </div>
-  <div class="hero-card">
-    <div class="mini-label">MONTHLY OVERVIEW</div>
-    <div class="fake-number">₹48,500</div>
-    <div class="progress"><i style="width:72%"></i></div>
-    <p>72% of budget tracked</p>
-    <div class="mini-grid"><b>Income<br><strong>₹60,000</strong></b><b>Saved<br><strong>₹11,500</strong></b></div>
-  </div>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Personal Finance Advisor</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f6fc;color:#172033}
+header{background:#172554;color:white;padding:24px}
+header h1{margin:0 0 8px;font-size:26px}
+header p{margin:0;color:#cbd5e1}
+nav{display:flex;gap:10px;flex-wrap:wrap;background:white;padding:14px 22px;box-shadow:0 2px 8px #0001}
+nav button,button{border:0;border-radius:8px;padding:10px 15px;background:#315bea;color:white;cursor:pointer}
+nav button{background:#e9efff;color:#2445b8}
+nav button.active{background:#315bea;color:white}
+main{max-width:1100px;margin:25px auto;padding:0 16px}
+.page{display:none}.page.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:20px}
+.card{background:white;padding:20px;border-radius:14px;box-shadow:0 4px 15px #1725540d;margin-bottom:16px}
+.card h2{font-size:18px;margin-top:0}
+.label{font-size:14px;color:#64748b}
+.number{font-size:28px;font-weight:bold;margin:12px 0;color:#2445b8}
+input,select{padding:11px;width:100%;border:1px solid #cbd5e1;border-radius:8px;margin:6px 0 14px;background:white}
+label{font-size:14px;font-weight:bold}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:12px 8px;border-bottom:1px solid #e2e8f0;font-size:14px}
+th{color:#64748b}
+.income{color:#13865b}.expense{color:#d14343}
+.progress{height:10px;background:#e2e8f0;border-radius:10px;overflow:hidden;margin:8px 0}
+.bar{height:100%;background:#315bea}
+.tip{background:#eef2ff;padding:14px;border-radius:10px;margin:10px 0;line-height:1.5}
+footer{text-align:center;color:#64748b;font-size:12px;padding:25px}
+.small{font-size:13px;color:#64748b}
+@media(max-width:500px){header h1{font-size:22px}.number{font-size:24px}th,td{padding:9px 4px;font-size:12px}}
+</style>
+</head>
+<body>
+<header>
+<h1>💰 AI Personal Finance Advisor</h1>
+<p>Manage your money, track expenses and plan your budget.</p>
+</header>
+
+<nav>
+<button class="active" onclick="showPage('dashboard',this)">Dashboard</button>
+<button onclick="showPage('transactions',this)">Transactions</button>
+<button onclick="showPage('budget',this)">Budget Planner</button>
+<button onclick="showPage('advice',this)">AI Financial Tips</button>
+</nav>
+
+<main>
+<section id="dashboard" class="page active">
+<h2>Financial Dashboard</h2>
+<p class="small">Sample data for project demonstration.</p>
+
+<div class="cards">
+<div class="card">
+<div class="label">Total Income</div>
+<div class="number" id="income">₹48,000</div>
+</div>
+<div class="card">
+<div class="label">Total Expenses</div>
+<div class="number" id="expenses">₹18,500</div>
+</div>
+<div class="card">
+<div class="label">Available Balance</div>
+<div class="number" id="balance">₹29,500</div>
+</div>
+<div class="card">
+<div class="label">Savings Rate</div>
+<div class="number" id="savings">61.5%</div>
+</div>
+</div>
+
+<div class="card">
+<h2>Recent Transactions</h2>
+<div style="overflow-x:auto">
+<table>
+<thead><tr><th>Description</th><th>Category</th><th>Amount</th></tr></thead>
+<tbody id="recent"></tbody>
+</table>
+</div>
+</div>
+
+<div class="card">
+<h2>Monthly Spending Overview</h2>
+<p>Income <strong id="chartIncome">₹48,000</strong></p>
+<div class="progress"><div class="bar" style="width:100%"></div></div>
+<p>Expenses <strong id="chartExpenses">₹18,500</strong></p>
+<div class="progress"><div class="bar" id="expenseBar" style="width:38.5%;background:#e6a23c"></div></div>
+</div>
 </section>
-<section class="features">
-  <div><b>💰 Track</b><p>Record income and expenses.</p></div>
-  <div><b>📊 Analyze</b><p>See category-wise spending.</p></div>
-  <div><b>🤖 AI Advisor</b><p>Get personalized recommendations.</p></div>
+
+<section id="transactions" class="page">
+<div class="card">
+<h2>Add Income or Expense</h2>
+<form id="transactionForm">
+<label for="description">Description</label>
+<input id="description" placeholder="Example: Groceries or Salary" required maxlength="80">
+
+<label for="amount">Amount (₹)</label>
+<input id="amount" type="number" min="1" step="1" placeholder="500" required>
+
+<label for="type">Transaction Type</label>
+<select id="type">
+<option value="expense">Expense</option>
+<option value="income">Income</option>
+</select>
+
+<label for="category">Category</label>
+<select id="category">
+<option>Food</option>
+<option>Transport</option>
+<option>Shopping</option>
+<option>Housing</option>
+<option>Education</option>
+<option>Health</option>
+<option>Salary</option>
+<option>Other</option>
+</select>
+
+<button type="submit">Add Transaction</button>
+</form>
+</div>
+
+<div class="card">
+<h2>All Transactions</h2>
+<div style="overflow-x:auto">
+<table>
+<thead><tr><th>Description</th><th>Category</th><th>Type</th><th>Amount</th></tr></thead>
+<tbody id="allTransactions"></tbody>
+</table>
+</div>
+</div>
 </section>
-{% endblock %}
+
+<section id="budget" class="page">
+<div class="card">
+<h2>Monthly Budget Planner</h2>
+<p>Set your monthly spending limit for each category.</p>
+<form id="budgetForm">
+<label for="foodBudget">Food Budget (₹)</label>
+<input id="foodBudget" type="number" min="0" value="6000" required>
+
+<label for="transportBudget">Transport Budget (₹)</label>
+<input id="transportBudget" type="number" min="0" value="2500" required>
+
+<label for="shoppingBudget">Shopping Budget (₹)</label>
+<input id="shoppingBudget" type="number" min="0" value="4000" required>
+
+<label for="otherBudget">Other Budget (₹)</label>
+<input id="otherBudget" type="number" min="0" value="5000" required>
+
+<button type="submit">Save Budget</button>
+</form>
+</div>
+<div class="card">
+<h2>Budget Usage</h2>
+<div id="budgetResults"></div>
+</div>
+</section>
+
+<section id="advice" class="page">
+<div class="card">
+<h2>💡 Personal Finance Tips</h2>
+<div class="tip"><strong>1. Follow a budget</strong><br>Plan your monthly income and expenses before spending.</div>
+<div class="tip"><strong>2. Build savings</strong><br>Set a realistic savings goal and contribute regularly when possible.</div>
+<div class="tip"><strong>3. Track spending</strong><br>Review your transactions to identify areas where you may be able to spend less.</div>
+<div class="tip"><strong>4. Prepare for emergencies</strong><br>Build an emergency fund gradually according to your needs.</div>
+<div class="tip"><strong>5. Review your goals</strong><br>Check your budget regularly and adjust it when your circumstances change.</div>
+<p class="small">These are built-in educational tips, not live AI-generated financial advice.</p>
+</div>
+</section>
+</main>
+
+<footer>
+AI Personal Finance Advisor | Student Project Demo<br>
+Demo only. No bank connection or real AI service is enabled.
+</footer>
+
+<script>
+const sampleData = [
+ {description:"Monthly Salary",category:"Salary",type:"income",amount:48000},
+ {description:"Groceries",category:"Food",type:"expense",amount:4200},
+ {description:"Transport",category:"Transport",type:"expense",amount:1400},
+ {description:"Online Course",category:"Education",type:"expense",amount:2500},
+ {description:"Shopping",category:"Shopping",type:"expense",amount:3800},
+ {description:"Electricity Bill",category:"Housing",type:"expense",amount:4600},
+ {description:"Health Supplies",category:"Health",type:"expense",amount:900},
+ {description:"Other Expenses",category:"Other",type:"expense",amount:1100}
+];
+
+let transactions = load("financeTransactions", sampleData);
+let budgets = load("financeBudgets", {
+ Food:6000, Transport:2500, Shopping:4000, Other:5000
+});
+
+function load(key, fallback) {
+ try {
+  const value = localStorage.getItem(key);
+  return value ? JSON.parse(value) : JSON.parse(JSON.stringify(fallback));
+ } catch(e) {
+  return JSON.parse(JSON.stringify(fallback));
+ }
+}
+
+function saveData() {
+ try {
+  localStorage.setItem("financeTransactions",JSON.stringify(transactions));
+  localStorage.setItem("financeBudgets",JSON.stringify(budgets));
+ } catch(e) {}
+}
+
+function money(n) {
+ return "₹"+Number(n).toLocaleString("en-IN",{maximumFractionDigits:0});
+}
+
+function safe(text) {
+ return String(text).replace(/[&<>"']/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+ });
+}
+
+function totals() {
+ const income=transactions.filter(t=>t.type==="income").reduce((s,t)=>s+t.amount,0);
+ const expenses=transactions.filter(t=>t.type==="expense").reduce((s,t)=>s+t.amount,0);
+ return {income,expenses,balance:income-expenses,
+ savings:income ? ((income-expenses)/income*100) : 0};
+}
+
+function showPage(id,button) {
+ document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+ if(button) button.classList.add("active");
+ window.scrollTo(0,0);
+}
+
+function render() {
+ const t=totals();
+ document.getElementById("income").textContent=money(t.income);
+ document.getElementById("expenses").textContent=money(t.expenses);
+ document.getElementById("balance").textContent=money(t.balance);
+ document.getElementById("savings").textContent=t.savings.toFixed(1)+"%";
+ document.getElementById("chartIncome").textContent=money(t.income);
+ document.getElementById("chartExpenses").textContent=money(t.expenses);
+ document.getElementById("expenseBar").style.width=
+  (t.income ? Math.min(100,t.expenses/t.income*100) : 0)+"%";
+
+ const recent=[...transactions].reverse().slice(0,5);
+ document.getElementById("recent").innerHTML=recent.length ? recent.map(t=>
+  `<tr><td>${safe(t.description)}</td><td>${safe(t.category)}</td>
+  <td class="${t.type}">${t.type==="income"?"+":"−"}${money(t.amount)}</td></tr>`
+ ).join("") : '<tr><td colspan="3">No transactions yet.</td></tr>';
+
+ const all=[...transactions].reverse();
+ document.getElementById("allTransactions").innerHTML=all.length ? all.map(t=>
+  `<tr><td>${safe(t.description)}</td><td>${safe(t.category)}</td>
+  <td>${t.type==="income"?"Income":"Expense"}</td>
+  <td class="${t.type}">${t.type==="income"?"+":"−"}${money(t.amount)}</td></tr>`
+ ).join("") : '<tr><td colspan="4">No transactions yet.</td></tr>';
+
+ renderBudgets();
+ saveData();
+}
+
+function renderBudgets() {
+ const spent={};
+ transactions.filter(t=>t.type==="expense").forEach(t=>{
+  spent[t.category]=(spent[t.category]||0)+t.amount;
+ });
+ const categories=[...new Set([...Object.keys(budgets),...Object.keys(spent)])];
+ document.getElementById("budgetResults").innerHTML=categories.map(cat=>{
+  const limit=Number(budgets[cat]||0);
+  const amount=spent[cat]||0;
+  const percent=limit ? Math.min(100,amount/limit*100) : 0;
+  const message=!limit ? "No budget set" :
+   amount>limit ? money(amount-limit)+" over budget" :
+   money(limit-amount)+" remaining";
+  return `<p><strong>${safe(cat)}</strong> — ${money(amount)} / ${money(limit)}</p>
+  <div class="progress"><div class="bar" style="width:${percent}%;background:${amount>limit?"#d14343":"#315bea"}"></div></div>
+  <p class="small">${message}</p>`;
+ }).join("");
+}
+
+document.getElementById("transactionForm").addEventListener("submit",function(e){
+ e.preventDefault();
+ const description=document.getElementById("description").value.trim();
+ const amount=Number(document.getElementById("amount").value);
+ if(!description || !Number.isFinite(amount) || amount<=0) {
+  alert("Please enter a valid description and amount.");
+  return;
+ }
+ transactions.push({
+  description,
+  amount,
+  type:document.getElementById("type").value,
+  category:document.getElementById("category").value
+ });
+ this.reset();
+ render();
+ alert("Transaction added successfully!");
+});
+
+document.getElementById("budgetForm").addEventListener("submit",function(e){
+ e.preventDefault();
+ budgets={
+  Food:Number(document.getElementById("foodBudget").value),
+  Transport:Number(document.getElementById("transportBudget").value),
+  Shopping:Number(document.getElementById("shoppingBudget").value),
+  Other:Number(document.getElementById("otherBudget").value)
+ };
+ render();
+ alert("Budget saved successfully!");
+});
+
+document.getElementById("foodBudget").value=budgets.Food;
+document.getElementById("transportBudget").value=budgets.Transport;
+document.getElementById("shoppingBudget").value=budgets.Shopping;
+document.getElementById("otherBudget").value=budgets.Other;
+
+render();
+</script>
+</body>
+</html>
